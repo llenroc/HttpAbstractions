@@ -62,7 +62,8 @@ namespace Microsoft.AspNetCore.Http.Internal
                 Path = options.Path,
                 Expires = options.Expires,
                 Secure = options.Secure,
-                HttpOnly = options.HttpOnly,
+                SameSite = options.SameSite,
+                HttpOnly = options.HttpOnly
             };
 
             var cookieValue = setCookieHeaderValue.ToString();

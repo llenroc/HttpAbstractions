@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.Net.Http.Headers
@@ -17,6 +18,9 @@ namespace Microsoft.Net.Http.Headers
         private const string DomainToken = "domain";
         private const string PathToken = "path";
         private const string SecureToken = "secure";
+        private const string SameSiteToken = "samesite";
+        private static readonly string SameSiteLaxToken = SameSiteEnforcementMode.Lax.ToString();
+        private static readonly string SameSiteStrictToken = SameSiteEnforcementMode.Strict.ToString();
         private const string HttpOnlyToken = "httponly";
         private const string SeparatorToken = "; ";
         private const string EqualsToken = "=";
@@ -87,15 +91,18 @@ namespace Microsoft.Net.Http.Headers
 
         public bool Secure { get; set; }
 
+        public SameSiteEnforcementMode SameSite { get; set; }
+
         public bool HttpOnly { get; set; }
 
-        // name="val ue"; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; httponly
+        // name="value"; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite={Strict|Lax}; httponly
         public override string ToString()
         {
             var length = _name.Length + EqualsToken.Length + _value.Length;
 
             string expires = null;
             string maxAge = null;
+            string sameSite = null;
 
             if (Expires.HasValue)
             {
@@ -122,6 +129,12 @@ namespace Microsoft.Net.Http.Headers
             if (Secure)
             {
                 length += SeparatorToken.Length + SecureToken.Length;
+            }
+
+            if (SameSite != SameSiteEnforcementMode.None)
+            {
+                sameSite = SameSite == SameSiteEnforcementMode.Lax ? SameSiteLaxToken : SameSiteStrictToken;
+                length += SeparatorToken.Length + SameSiteToken.Length + EqualsToken.Length + sameSite.Length;
             }
 
             if (HttpOnly)
@@ -158,6 +171,11 @@ namespace Microsoft.Net.Http.Headers
             if (Secure)
             {
                 AppendSegment(ref sb, SecureToken, null);
+            }
+
+            if (SameSite != SameSiteEnforcementMode.None)
+            {
+                AppendSegment(ref sb, SameSiteToken, sameSite);
             }
 
             if (HttpOnly)
@@ -218,6 +236,11 @@ namespace Microsoft.Net.Http.Headers
                 AppendSegment(builder, SecureToken, null);
             }
 
+            if (SameSite != SameSiteEnforcementMode.None)
+            {
+                AppendSegment(builder, SameSiteToken, SameSite == SameSiteEnforcementMode.Lax ? SameSiteLaxToken : SameSiteStrictToken);
+            }
+
             if (HttpOnly)
             {
                 AppendSegment(builder, HttpOnlyToken, null);
@@ -267,7 +290,7 @@ namespace Microsoft.Net.Http.Headers
             return MultipleValueParser.TryParseStrictValues(inputs, out parsedValues);
         }
 
-        // name=value; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; httponly
+        // name=value; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite={Strict|Lax}; httponly
         private static int GetSetCookieLength(string input, int startIndex, out SetCookieHeaderValue parsedValue)
         {
             Contract.Requires(startIndex >= 0);
@@ -322,7 +345,7 @@ namespace Microsoft.Net.Http.Headers
 
                 offset += HttpRuleParser.GetWhitespaceLength(input, offset);
 
-                //  cookie-av = expires-av / max-age-av / domain-av / path-av / secure-av / httponly-av / extension-av
+                //  cookie-av = expires-av / max-age-av / domain-av / path-av / secure-av / samesite-av / httponly-av / extension-av
                 itemLength = HttpRuleParser.GetTokenLength(input, offset);
                 if (itemLength == 0)
                 {
@@ -402,6 +425,28 @@ namespace Microsoft.Net.Http.Headers
                 {
                     result.Secure = true;
                 }
+                // samesite-av = "SameSite" / "SameSite=" samesite-value
+                // samesite-value = "Strict" / "Lax"
+                else if (string.Equals(token, SameSiteToken, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!ReadEqualsSign(input, ref offset))
+                    {
+                        result.SameSite = SameSiteEnforcementMode.Strict;
+                    }
+                    else
+                    {
+                        var enforcementMode = ReadToSemicolonOrEnd(input, ref offset);
+
+                        if (string.Equals(enforcementMode, SameSiteLaxToken, StringComparison.OrdinalIgnoreCase))
+                        {
+                            result.SameSite = SameSiteEnforcementMode.Lax;
+                        }
+                        else if (string.Equals(enforcementMode, SameSiteStrictToken, StringComparison.OrdinalIgnoreCase))
+                        {
+                            result.SameSite = SameSiteEnforcementMode.Strict;
+                        }
+                    }
+                }
                 // httponly-av = "HttpOnly"
                 else if (string.Equals(token, HttpOnlyToken, StringComparison.OrdinalIgnoreCase))
                 {
@@ -459,6 +504,7 @@ namespace Microsoft.Net.Http.Headers
                 && string.Equals(Domain, other.Domain, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase)
                 && Secure == other.Secure
+                && SameSite == other.SameSite
                 && HttpOnly == other.HttpOnly;
         }
 
@@ -471,6 +517,7 @@ namespace Microsoft.Net.Http.Headers
                 ^ (Domain != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(Domain) : 0)
                 ^ (Path != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(Path) : 0)
                 ^ Secure.GetHashCode()
+                ^ SameSite.GetHashCode()
                 ^ HttpOnly.GetHashCode();
         }
     }

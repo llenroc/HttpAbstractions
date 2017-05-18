@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 using Xunit;
 
 namespace Microsoft.Net.Http.Headers
@@ -20,12 +21,13 @@ namespace Microsoft.Net.Http.Headers
                 {
                     Domain = "domain1",
                     Expires = new DateTimeOffset(1994, 11, 6, 8, 49, 37, TimeSpan.Zero),
+                    SameSite = SameSiteEnforcementMode.Strict,
                     HttpOnly = true,
                     MaxAge = TimeSpan.FromDays(1),
                     Path = "path1",
                     Secure = true
                 };
-                dataset.Add(header1, "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; httponly");
+                dataset.Add(header1, "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite=Strict; httponly");
 
                 var header2 = new SetCookieHeaderValue("name2", "");
                 dataset.Add(header2, "name2=");
@@ -106,12 +108,13 @@ namespace Microsoft.Net.Http.Headers
                 {
                     Domain = "domain1",
                     Expires = new DateTimeOffset(1994, 11, 6, 8, 49, 37, TimeSpan.Zero),
+                    SameSite = SameSiteEnforcementMode.Lax,
                     HttpOnly = true,
                     MaxAge = TimeSpan.FromDays(1),
                     Path = "path1",
                     Secure = true
                 };
-                var string1 = "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; httponly";
+                var string1 = "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite=Lax; httponly";
 
                 var header2 = new SetCookieHeaderValue("name2", "value2");
                 var string2 = "name2=value2";
@@ -152,12 +155,13 @@ namespace Microsoft.Net.Http.Headers
                 {
                     Domain = "domain1",
                     Expires = new DateTimeOffset(1994, 11, 6, 8, 49, 37, TimeSpan.Zero),
+                    SameSite = SameSiteEnforcementMode.Strict,
                     HttpOnly = true,
                     MaxAge = TimeSpan.FromDays(1),
                     Path = "path1",
                     Secure = true
                 };
-                var string1 = "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; httponly";
+                var string1 = "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite=Strict; httponly";
 
                 var header2 = new SetCookieHeaderValue("name2", "value2");
                 var string2 = "name2=value2";
