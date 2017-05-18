@@ -47,6 +47,19 @@ namespace Microsoft.Net.Http.Headers
                 };
                 dataset.Add(header5, "name5=value5; expires=Sun, 06 Nov 1994 08:49:37 GMT; domain=domain1");
 
+                var header6 = new SetCookieHeaderValue("name6", "value6")
+                {
+                    SameSite = SameSiteEnforcementMode.Lax,
+                };
+                dataset.Add(header6, "name6=value6; samesite=Lax");
+
+                var header7 = new SetCookieHeaderValue("name7", "value7")
+                {
+                    SameSite = SameSiteEnforcementMode.None,
+                };
+                dataset.Add(header7, "name7=value7");
+
+
                 return dataset;
             }
         }
@@ -107,13 +120,13 @@ namespace Microsoft.Net.Http.Headers
                 {
                     Domain = "domain1",
                     Expires = new DateTimeOffset(1994, 11, 6, 8, 49, 37, TimeSpan.Zero),
-                    SameSite = SameSiteEnforcementMode.Lax,
+                    SameSite = SameSiteEnforcementMode.Strict,
                     HttpOnly = true,
                     MaxAge = TimeSpan.FromDays(1),
                     Path = "path1",
                     Secure = true
                 };
-                var string1 = "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite=Lax; httponly";
+                var string1 = "name1=n1=v1&n2=v2&n3=v3; expires=Sun, 06 Nov 1994 08:49:37 GMT; max-age=86400; domain=domain1; path=path1; secure; samesite=Strict; httponly";
 
                 var header2 = new SetCookieHeaderValue("name2", "value2");
                 var string2 = "name2=value2";
@@ -131,6 +144,18 @@ namespace Microsoft.Net.Http.Headers
                 };
                 var string4 = "name4=value4; expires=Sun, 06 Nov 1994 08:49:37 GMT; domain=domain1";
 
+                var header5 = new SetCookieHeaderValue("name5", "value5")
+                {
+                    SameSite = SameSiteEnforcementMode.Lax
+                };
+                var string5 = "name5=value5; samesite=Lax";
+
+                var header6 = new SetCookieHeaderValue("name6", "value6")
+                {
+                    SameSite = SameSiteEnforcementMode.Strict
+                };
+                var string6 = "name6=value6; samesite";
+
                 dataset.Add(new[] { header1 }.ToList(), new[] { string1 });
                 dataset.Add(new[] { header1, header1 }.ToList(), new[] { string1, string1 });
                 dataset.Add(new[] { header1, header1 }.ToList(), new[] { string1, null, "", " ", ",", " , ", string1 });
@@ -140,6 +165,8 @@ namespace Microsoft.Net.Http.Headers
                 dataset.Add(new[] { header2, header1 }.ToList(), new[] { string2 + ", " + string1 });
                 dataset.Add(new[] { header1, header2, header3, header4 }.ToList(), new[] { string1, string2, string3, string4 });
                 dataset.Add(new[] { header1, header2, header3, header4 }.ToList(), new[] { string.Join(",", string1, string2, string3, string4) });
+                dataset.Add(new[] { header5 }.ToList(), new[] { string5 });
+                dataset.Add(new[] { header6 }.ToList(), new[] { string6 });
 
                 return dataset;
             }
