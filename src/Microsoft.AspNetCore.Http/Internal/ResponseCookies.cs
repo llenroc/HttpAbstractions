@@ -62,7 +62,7 @@ namespace Microsoft.AspNetCore.Http.Internal
                 Path = options.Path,
                 Expires = options.Expires,
                 Secure = options.Secure,
-                SameSite = options.SameSite,
+                SameSite = (Net.Http.Headers.SameSiteEnforcementMode)options.SameSite,
                 HttpOnly = options.HttpOnly
             };
 
